@@ -48,3 +48,23 @@ jobs:
       - run:
           name: Run Tests
           command: ./gradlew lint test
+  
+  development_release:
+    steps:
+      - run:
+          name: Fastlane - Build developement build and upload to AppCenter
+          command: bundle exec fastlane android development_release
+          no_output_timeout: 30m
+
+# Workflows
+workflows:
+  version: 2
+  
+  development:
+    jobs:
+      - build_workspace:
+          filters:
+            branches:
+              only:
+                - development
+      - development_release
