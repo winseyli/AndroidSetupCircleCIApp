@@ -35,4 +35,25 @@ platform :android do
     gradle(task: "clean assembleRelease")
     upload_to_play_store
   end
+
+  #
+  #
+  #   App center release lanes
+  #
+  #
+  desc "Create a development build and upload to AppCenter ready for QA testing."
+  lane :development_release do
+
+    gradle(task: "clean assembleRelease")
+
+    # upload to app center
+    appcenter_upload(
+      api_token: ENV["APPCENTER_TOKEN"],
+      owner_name: ENV["APPCENTER_OWNER_NAME"],
+      app_name: ENV["MAIN_APP_TARGET"],
+      apk: ENV["APK_PATH"],
+      notify_testers: true,
+    )
+
+  end
 end
