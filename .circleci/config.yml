@@ -62,4 +62,8 @@ workflows:
   
   development:
     jobs:
-      - development_release
+      - development_release:
+          filters:
+            branches:
+              only:
+                - development
