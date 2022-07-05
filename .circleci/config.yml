@@ -5,7 +5,7 @@ version: 2
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  build:
+  build_workspace:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
@@ -23,6 +23,7 @@ jobs:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
       TERM: dumb
+    
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
@@ -43,13 +44,15 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-
+  
+  lint_test:
+    steps:
       # run tests!
       - run:
           name: Run Tests
           command: ./gradlew lint test
   
-  development_release:
+  release_development_build:
     steps:
       - run:
           name: Fastlane - Build developement build and upload to AppCenter
@@ -62,8 +65,14 @@ workflows:
   
   development:
     jobs:
-      - development_release:
+      - build_workspace:
           filters:
             branches:
               only:
                 - development
+      - lint_test:
+          requires:
+            - build_workspace
+      - release_development_build:
+          requires:
+            - lint_test
