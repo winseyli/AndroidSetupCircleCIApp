@@ -70,9 +70,6 @@ workflows:
             branches:
               only:
                 - development
-      - lint_test:
-          requires:
-            - build_workspace
       - release_development_build:
           requires:
-            - lint_test
+            - build_workspace
