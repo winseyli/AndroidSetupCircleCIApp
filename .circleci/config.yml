@@ -65,9 +65,13 @@ jobs:
   test:
     <<: *defaults
     steps:
+      - attach_workspace:
+          at: *workspace_root
       - run:
           name: Run Tests
           command: ./gradlew lint test
+      - store_artifacts:
+          path: output
   
   release_development_build:
     <<: *defaults
@@ -84,6 +88,17 @@ jobs:
 # Workflows
 workflows:
   version: 2
+
+  all_branches:
+    jobs:
+      - build_workspace:
+          filters:
+            branches:
+              only:
+                - /.*/
+      - test:
+          requires:
+            - build_workspace
   
   development:
     jobs:
