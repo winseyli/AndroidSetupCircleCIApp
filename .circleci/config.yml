@@ -2,6 +2,9 @@
 # See: https://circleci.com/docs/2.0/language-java/
 version: 2
 
+workspace_root: &workspace_root
+  /home/circleci/
+
 defaults: &defaults
   # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
   # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
@@ -49,6 +52,15 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
+        
+      # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: *workspace_root
+          # Must be relative path from root
+          paths:
+            - repo
   
   test:
     <<: *defaults
