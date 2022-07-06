@@ -2,31 +2,42 @@
 # See: https://circleci.com/docs/2.0/language-java/
 version: 2
 
+workspace_root: &workspace_root
+  /home/circleci/
+
+defaults: &defaults
+  # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+  # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+  docker:
+    # specify the version you desire here
+    - image: circleci/android:api-30
+
+    # Specify service dependencies here if necessary
+    # CircleCI maintains a library of pre-built images
+    # documented at https://circleci.com/docs/2.0/circleci-images/
+    # - image: circleci/postgres:9.4
+
+  working_directory: ~/repo
+
+  environment:
+    # Customize the JVM maximum heap limit
+    JVM_OPTS: -Xmx3200m
+    TERM: dumb
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  build:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      # specify the version you desire here
-      - image: circleci/android:api-30
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    working_directory: ~/repo
-
-    environment:
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+  build_workspace:
+    <<: *defaults
     steps:
       - checkout
+      - restore_cache:
+          key: 1-gems-{{ checksum "Gemfile.lock" }}
+      - run: bundle check || bundle install --path vendor/bundle
+      - save_cache:
+          key: 1-gems-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
 
       # Download and cache dependencies
       - restore_cache:
@@ -34,17 +45,53 @@ jobs:
             - v1-dependencies-{{ checksum "build.gradle" }}
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
-
       - run:
           name: Download Dependencies
           command: ./gradlew androidDependencies
-
       - save_cache:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-
-      # run tests!
+        
+      # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: *workspace_root
+          # Must be relative path from root
+          paths:
+            - repo
+  
+  test:
+    <<: *defaults
+    steps:
       - run:
           name: Run Tests
           command: ./gradlew lint test
+  
+  release_development_build:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: *workspace_root
+      - run:
+          name: Fastlane - Build developement build and upload to AppCenter
+          command: bundle exec fastlane android development_release
+          no_output_timeout: 30m
+      - store_artifacts:
+          path: output
+
+# Workflows
+workflows:
+  version: 2
+  
+  development:
+    jobs:
+      - build_workspace:
+          filters:
+            branches:
+              only:
+                - development
+      - release_development_build:
+          requires:
+            - build_workspace
