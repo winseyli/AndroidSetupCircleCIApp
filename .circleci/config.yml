@@ -28,7 +28,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      restore_cache:
+      - restore_cache:
           key: 1-gems-{{ checksum "Gemfile.lock" }}
       - run: bundle check || bundle install --path vendor/bundle
       - save_cache:
@@ -81,4 +81,3 @@ workflows:
       - release_development_build:
           requires:
             - build_workspace
-
