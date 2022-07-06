@@ -35,7 +35,7 @@ jobs:
           key: 1-gems-{{ checksum "Gemfile.lock" }}
           paths:
             - vendor/bundle
-            
+
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -81,3 +81,4 @@ workflows:
       - release_development_build:
           requires:
             - build_workspace
+
