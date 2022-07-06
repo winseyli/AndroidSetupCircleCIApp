@@ -84,6 +84,17 @@ jobs:
 # Workflows
 workflows:
   version: 2
+
+  all_branches:
+    jobs:
+      - build_workspace:
+          filters:
+            branches:
+              only:
+                - /.*/
+      - test:
+          requires:
+            - build_workspace
   
   development:
     jobs:
