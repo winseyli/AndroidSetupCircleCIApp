@@ -20,8 +20,6 @@ defaults: &defaults
     # Customize the JVM maximum heap limit
     JVM_OPTS: -Xmx3200m
     TERM: dumb
-  
-  shell: /bin/bash --login -o pipefail
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -31,13 +29,6 @@ jobs:
     steps:
       - checkout
       # Download and cache dependencies
-      - restore_cache:
-          key: 1-gems-{{ checksum "Gemfile.lock" }}
-      - run: bundle check || bundle install --path vendor/bundle
-      - save_cache:
-          key: 1-gems-{{ checksum "Gemfile.lock" }}
-          paths:
-            - vendor/bundle
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "build.gradle" }}
@@ -63,7 +54,7 @@ jobs:
     steps:
       - run:
           name: Fastlane - Build developement build and upload to AppCenter
-          command: bundle exec fastlane android development_release
+          command: fastlane android development_release
           no_output_timeout: 30m
       - store_artifacts:
           path: output
