@@ -72,6 +72,8 @@ jobs:
   release_development_build:
     <<: *defaults
     steps:
+      - attach_workspace:
+          at: *workspace_root
       - run:
           name: Fastlane - Build developement build and upload to AppCenter
           command: bundle exec fastlane android development_release
