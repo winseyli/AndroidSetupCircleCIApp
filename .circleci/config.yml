@@ -1,6 +1,4 @@
-# Java Gradle CircleCI 2.0 configuration file
-# See: https://circleci.com/docs/2.0/language-java/
-version: 2
+version: 2.1
 
 workspace_root: &workspace_root
   /home/circleci/
@@ -10,12 +8,7 @@ defaults: &defaults
   # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
   docker:
     # specify the version you desire here
-    - image: circleci/android:api-30
-
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    # - image: circleci/postgres:9.4
+    - image: cimg/android:2022.06
 
   working_directory: ~/repo
 
@@ -33,7 +26,9 @@ jobs:
       - checkout
       - restore_cache:
           key: 1-gems-{{ checksum "Gemfile.lock" }}
-      - run: bundle check || bundle install --path vendor/bundle
+      - run:
+          name: Bundle check and install
+          command: bundle check || bundle install --path vendor/bundle
       - save_cache:
           key: 1-gems-{{ checksum "Gemfile.lock" }}
           paths:
@@ -65,6 +60,8 @@ jobs:
   test:
     <<: *defaults
     steps:
+      - attach_workspace:
+          at: *workspace_root
       - run:
           name: Run Tests
           command: ./gradlew lint test
@@ -84,6 +81,17 @@ jobs:
 # Workflows
 workflows:
   version: 2
+
+  all_branches:
+    jobs:
+      - build_workspace:
+          filters:
+            branches:
+              only:
+                - /.*/
+      - test:
+          requires:
+            - build_workspace
   
   development:
     jobs:
