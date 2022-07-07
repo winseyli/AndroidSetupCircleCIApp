@@ -63,6 +63,8 @@ jobs:
   test:
     <<: *defaults
     steps:
+      - attach_workspace:
+          at: *workspace_root
       - run:
           name: Run Tests
           command: ./gradlew lint test
