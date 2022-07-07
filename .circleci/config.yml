@@ -8,7 +8,7 @@ defaults: &defaults
   # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
   machine:
     # specify the version you desire here
-    - image: android:2022.06.1
+    image: android:2022.06.1
 
   working_directory: ~/repo
 
